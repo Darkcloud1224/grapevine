@@ -19,6 +19,8 @@ def hello_world():
                 "message": {
                     "role": "assistant",
                     "content": {
+                        'component_status': True,
+                        'component_content': "dayummm", 
                         "content": "The Los Angeles Dodgers won the World Series in 2020."
                     }
                 },
@@ -34,4 +36,4 @@ def hello_world():
         "system_fingerprint": None
     }
     # Convert the dictionary to JSON and return
-    return response
+    return jsonify(response)
