@@ -3,7 +3,7 @@ from flask import Flask, jsonify
 app = Flask(__name__)
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/chat", methods=["GET", "POST"])
 def hello_world():
     data = {
         "choices": [
