@@ -5,27 +5,28 @@ app = Flask(__name__)
 
 @app.route("/chat", methods=["GET", "POST"])
 def hello_world():
-    data = {
+    response = {
+        "id": "chatcmpl-9CpKpeGMVJdAydihzkjO4AB3DMnnX",
+        "object": "chat.completion",
+        "created": 1712844295,
+        "model": "gpt-4-0613",
         "choices": [
             {
-                "finish_reason": "stop",
                 "index": 0,
                 "message": {
-                    "content": "The 2020 World Series was played in Texas at Globe Life Field in Arlington.",
-                    "role": "assistant"
+                    "role": "assistant",
+                    "content": "The Los Angeles Dodgers won the World Series in 2020."
                 },
-                "logprobs": None
+                "logprobs": None,
+                "finish_reason": "stop"
             }
         ],
-        "created": 1677664795,
-        "id": "chatcmpl-7QyqpwdfhqwajicIEznoc6Q47XAyW",
-        "model": "gpt-3.5-turbo-0613",
-        "object": "chat.completion",
         "usage": {
-            "completion_tokens": 17,
-            "prompt_tokens": 57,
-            "total_tokens": 74
-        }
+            "prompt_tokens": 17,
+            "completion_tokens": 13,
+            "total_tokens": 30
+        },
+        "system_fingerprint": None
     }
     # Convert the dictionary to JSON and return
-    return jsonify(data)
+    return response
