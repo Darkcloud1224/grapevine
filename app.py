@@ -18,7 +18,9 @@ def hello_world():
                 "index": 0,
                 "message": {
                     "role": "assistant",
-                    "content": "The Los Angeles Dodgers won the World Series in 2020."
+                    "content": {
+                        "content": "The Los Angeles Dodgers won the World Series in 2020."
+                    }
                 },
                 "logprobs": None,
                 "finish_reason": "stop"
