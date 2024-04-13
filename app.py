@@ -20,7 +20,7 @@ def hello_world():
                     "role": "assistant",
                     "content": {
                         'component_status': True,
-                        'component_content': "dayummm", 
+                        'component_content': "https://www.arloandolive.com/cdn/shop/products/DSC00727copy_1100x.jpg?v=1631835048", 
                         "content": "The Los Angeles Dodgers won the World Series in 2020."
                     }
                 },
