@@ -17,8 +17,7 @@ from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_openai import ChatOpenAI
-# Set the OpenAI API key
-os.environ['OPENAI_API_KEY'] = "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"
+
 
 # Set up the chat model
 model = ChatOpenAI(temperature=0.5)
