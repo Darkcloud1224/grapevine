@@ -51,7 +51,10 @@ chain = prompt | model | parser
 
 @app.route("/chat", methods=["GET", "POST"])
 def hello_world():
-    joke_query = "Recommend a blue shirt that is sustainablea and retireve it from the database"
+    json_data = request.json
+    print("Received JSON data:")
+    print(json_data)
+    joke_query = "Good Morning"
     x = chain.invoke({"query": joke_query})
     response = {
         "id": "chatcmpl-9CpKpeGMVJdAydihzkjO4AB3DMnnX",
