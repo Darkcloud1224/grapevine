@@ -30,7 +30,7 @@ from langchain.memory import ConversationBufferMemory
 import os
 # Set the OpenAI API key
 # Set up the chat model
-llm = ChatOpenAI(temperature=0.5, max_tokens = 100)
+llm = ChatOpenAI(temperature=0.5, max_tokens = 1000)
 
 # Set up the memory
 memory = ConversationBufferMemory(memory_key="chat_history")
