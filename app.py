@@ -81,7 +81,7 @@ conversation = LLMChain(
 
 @app.route("/chat", methods=["GET", "POST"])
 def hello_world():
-    json_data = request.json
+    # json_data = request.json
     joke_query = request.args.get("message")
 
     # joke_query = "Good Morning"
@@ -117,5 +117,3 @@ def hello_world():
     
     # Convert the dictionary to JSON and return
     return jsonify(response)
-if __name__ == "__main__":
-    app.run()
