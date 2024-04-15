@@ -1,54 +1,40 @@
-import os
-from langchain.agents import initialize_agent
-from langchain.chat_models import ChatOpenAI
-from langchain.memory import ConversationBufferMemory
-from langchain.prompts import PromptTemplate
-from langchain_core.output_parsers import JsonOutputParser
-from langchain_core.pydantic_v1 import BaseModel, Field
-from typing import List
-
-from langchain.prompts import PromptTemplate
-from langchain_core.output_parsers import JsonOutputParser
-from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_openai import ChatOpenAI
-# Set the OpenAI API key
-os.environ['OPENAI_API_KEY'] = "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"
+from langchain.prompts import (
+    ChatPromptTemplate,
+    MessagesPlaceholder,
+    SystemMessagePromptTemplate,
+    HumanMessagePromptTemplate,
+)
+from langchain.chains import LLMChain
+from langchain.memory import ConversationBufferMemory
+import os
+
+os.environ["OPENAI_API_KEY"] = "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"
 
 # Set up the chat model
-model = ChatOpenAI(temperature=0.5)
+llm = ChatOpenAI(temperature=0.5, max_tokens = 100)
 
-# Set up the memory
-memory = ConversationBufferMemory(memory_key="chat_history")
-
-
-
-class Joke(BaseModel):
-    requires: bool = Field(description="answer to wether the user requires data to be retrieved from the database. if it doesn't require data from database return False else if it requirers then return True (look for keywords like recommend)")
-    keywords: List[str] = Field(description="list of keywords tot use for search")
-    response: str = Field(description="response if user doesn't require data from database")
-
-    
-
-parser = JsonOutputParser(pydantic_object=Joke)
-
-# Define the personality prompt
-persona_prompt = PromptTemplate(
-    template="Answer the user query.\n{format_instructions}\n{query}\n",
-    input_variables=["query"],
-    partial_variables={"format_instructions": parser.get_format_instructions()},
+prompt = ChatPromptTemplate(
+    messages=[
+        SystemMessagePromptTemplate.from_template(
+            "You are a nice chatbot having a conversation with a human and your job is to help them to make their life more sustainable."
+        ),
+        # The `variable_name` here is what must align with memory
+        MessagesPlaceholder(variable_name="chat_history"),
+        HumanMessagePromptTemplate.from_template("{question}")
+    ]
+)
+# Notice that we `return_messages=True` to fit into the MessagesPlaceholder
+# Notice that `"chat_history"` aligns with the MessagesPlaceholder name.
+memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+conversation = LLMChain(
+    llm=llm,
+    prompt=prompt,
+    verbose=True,
+    memory=memory
 )
 
+while True:
+    x = conversation({"question": input("user: ")})
+    print()
 
-joke_query = "Good Morning, Can you recommend a black shirt for me?"
-
-
-prompt = PromptTemplate(
-    template="Answer the user query.\n{format_instructions}\n{query}\n",
-    input_variables=["query"],
-    partial_variables={"format_instructions": parser.get_format_instructions()},
-)
-
-chain = prompt | model | parser
-
-x= chain.invoke({"query": joke_query})
-print(x)
