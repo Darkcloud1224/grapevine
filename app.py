@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from algoliasearch.search_client import SearchClient
 
 
 app = Flask(__name__)
@@ -25,57 +26,89 @@ from langchain.prompts import (
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
+from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.chat_history import BaseChatMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
 import os
 # Set the OpenAI API key
 # Set up the chat model
-llm = ChatOpenAI(temperature=0.5, max_tokens = 1000)
+# ========================================================================================================================
+model = ChatOpenAI(api_key="sk-proj-BMVh1RKuJSM1kHJQ0eo4T3BlbkFJwjSss4I4ByAZAM2RE1IB",max_tokens = 4000, model="gpt-4o")
 
-# Set up the memory
-memory = ConversationBufferMemory(memory_key="chat_history")
+class SearchOutput(BaseModel):
+    keywords: str = Field(description="remove unneeded words such as stepwords and verbs or general words like product and only keep only keep keywords with meaning for search such as product names, description, brand names, basically anything that describes the product. (words to not include: 'products', 'recommendation')")
+    needs_product: bool = Field(description="is the user asking for a product or asking for a recommendation of a product. if not then return false otherwise return true")
 
-
-
-# class Joke(BaseModel):
-#     component_status: bool = Field(description="answer to wether the user requires data to be retrieved from the database. if it doesn't require data from database return False else if it requirers then return True (look for keywords like recommend)")
-#     keywords: List[str] = Field(description="list of keywords tot use for search")
-#     response: str = Field(description="respond normally here whether component_status is true or false")
+searchParser = JsonOutputParser(pydantic_object=SearchOutput)
+    
+class DescriptionOutput(BaseModel):
+    response: str = Field(description="talk about the product description and its material and what's it's made out of and why they're sustainable. don't provide any url")
+    # response: str = Field(description="")
 
     
-
-# parser = JsonOutputParser(pydantic_object=Joke)
-
-
-
-
-# prompt = PromptTemplate(
-#     template="Answer the user query.\n{format_instructions}\n{query}\n",
-#     input_variables=["query"],
-#     partial_variables={"format_instructions": parser.get_format_instructions()},
-# )
-
-# chain = prompt | model | parser
-
-prompt = ChatPromptTemplate(
-    messages=[
-        SystemMessagePromptTemplate.from_template(
-            "You are a nice chatbot having a conversation with a human and your job is to help them to make their life more sustainable."
+DescriptionParser = JsonOutputParser(pydantic_object=DescriptionOutput)
+    
+prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You're an assistant  called Vinny, who's good at {ability}.you're very chill and somewhat informal and follow the format instructions {instructions}",
         ),
-        # The `variable_name` here is what must align with memory
-        MessagesPlaceholder(variable_name="chat_history"),
-        HumanMessagePromptTemplate.from_template("{question}")
+        MessagesPlaceholder(variable_name="history"),
+        ("human", "{input}"),
     ]
 )
-# Notice that we `return_messages=True` to fit into the MessagesPlaceholder
-# Notice that `"chat_history"` aligns with the MessagesPlaceholder name.
-memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-conversation = LLMChain(
-    llm=llm,
-    prompt=prompt,
-    verbose=True,
-    memory=memory
-)
+runnable = prompt | model 
+store = {}
+def get_session_history(session_id: str) -> BaseChatMessageHistory:
+    if session_id not in store:
+        store[session_id] = ChatMessageHistory()
+    return store[session_id]
+with_message_history = RunnableWithMessageHistory(
+    runnable,
+    get_session_history,
+    input_messages_key="input",
+    history_messages_key="history",
+) 
+
+with_message_history_search = with_message_history | searchParser
+with_message_history_describe = with_message_history | DescriptionParser
+
+# ========================================================================================================================
+
+
+# Setting up search function
+# ========================================================================================================================
+
+# Connect and authenticate with your Algolia app
+applicationID = "D50DM3JZ06"
+api_key = "e7c937a48f59d3e0790d63dc7f75bd71"
+client = SearchClient.create(applicationID, api_key)
+
+def search_product(query):
+    # Search the index and print the results
+    index = client.init_index("Product")
+
+    results = index.search(query)
+    try:
+        result = results["hits"][0]
+        output = {
+            "ProductName": result["ProductName"],
+            "ProductPath": result["objectID"],
+            "ProductDescription": result["ProductDescription"],
+            "ProductPrice": result["ProductPrice"],
+            "BrandName": result["BrandNameText"]
+            
+            
+        }
+        print(output)
+        return output
+    except:
+        return {}
+
+# ========================================================================================================================
 
 
 
@@ -83,11 +116,38 @@ conversation = LLMChain(
 def hello_world():
     json_data = request.json
 
-    joke_query = json_data["messages"][-1]["content"]
-
+    message = json_data["messages"][-1]["content"]
+    print(message)
     # joke_query = "Good Morning"
-    x = conversation({"question": joke_query})
-    x = x["chat_history"][-1].content
+    # message = message.get('message', 'No message provided')
+    searchquery = with_message_history_search.invoke(
+        {"ability": "remove unneeded words such as stepwords and verbs or general words like product and only keep only keep keywords for search such as product names, descrption, brand names", "input": str(message), "instructions": str(searchParser.get_format_instructions())},
+        config={"configurable": {"session_id": "abc123"}},
+    )
+    print(searchquery["keywords"])
+    if searchquery["needs_product"]:
+        searchquery = searchquery["keywords"]
+        
+        searchquery = search_product(searchquery)
+        print("product: " + str(searchquery))
+        if not searchquery:
+            DescriptionQuery = with_message_history_describe.invoke(
+                {"ability": "Helping users improve their lifestyles and make it more sustainable. if the users message isn't clear always ask leading questions. if the user is asking for product recommendation and the product details isn't provided then assume product doesn't exist within our market and apologize", "input": f"{message}", "instructions": str(DescriptionParser.get_format_instructions())},
+                config={"configurable": {"session_id": "abc123"}},
+            )
+        else:
+            DescriptionQuery = with_message_history_describe.invoke(
+                {"ability": "Helping users improve their lifestyles and make it more sustainable as well as help them find the products they need", "input": f"user query: {message} product details:{searchquery}", "instructions": str(DescriptionParser.get_format_instructions())},
+                config={"configurable": {"session_id": "abc123"}},
+            )
+    else:
+        DescriptionQuery = with_message_history_describe.invoke(
+                {"ability": "Helping users improve their lifestyles and make it more sustainable as well as help them find the products they need.", "input": f"{message}", "instructions": str(DescriptionParser.get_format_instructions())},
+                config={"configurable": {"session_id": "abc123"}},
+            )
+
+    print(searchquery)
+    # x = 1
     response = {
         "id": "chatcmpl-9CpKpeGMVJdAydihzkjO4AB3DMnnX",
         "object": "chat.completion",
@@ -101,7 +161,14 @@ def hello_world():
                     "content": {
                         'component_status': False,
                         'component_content': "https://www.arloandolive.com/cdn/shop/products/DSC00727copy_1100x.jpg?v=1631835048", 
-                        "content": x
+                        "content": DescriptionQuery,
+                        "product_path": searchquery.get("ProductPath", None),
+                        "ProductName": searchquery.get("ProductName", None),
+                        "ProductPrice": searchquery.get("ProductPrice", None),
+                        "BrandName": searchquery.get("BrandName", None),
+
+
+                        
                     }
                 },
                 "logprobs": None,
