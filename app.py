@@ -127,6 +127,7 @@ def hello_world():
         config={"configurable": {"session_id": "abc123"}},
     )
     print(searchquery["keywords"])
+    component_status = True
     if searchquery["needs_product"]:
         searchquery = searchquery["keywords"]
         
@@ -137,6 +138,7 @@ def hello_world():
                 {"ability": "Helping users improve their lifestyles and make it more sustainable. if the users message isn't clear always ask leading questions. if the user is asking for product recommendation and the product details isn't provided then assume product doesn't exist within our market and apologize", "input": f"{message}", "instructions": str(DescriptionParser.get_format_instructions())},
                 config={"configurable": {"session_id": "abc123"}},
             )
+            component_status = False
         else:
             DescriptionQuery = with_message_history_describe.invoke(
                 {"ability": "Helping users improve their lifestyles and make it more sustainable as well as help them find the products they need", "input": f"user query: {message} product details:{searchquery}", "instructions": str(DescriptionParser.get_format_instructions())},
@@ -147,6 +149,8 @@ def hello_world():
                 {"ability": "Helping users improve their lifestyles and make it more sustainable as well as help them find the products they need.", "input": f"{message}", "instructions": str(DescriptionParser.get_format_instructions())},
                 config={"configurable": {"session_id": "abc123"}},
             )
+        component_status = False
+
 
     print(searchquery)
     # x = 1
@@ -161,16 +165,13 @@ def hello_world():
                 "message": {
                     "role": "assistant",
                     "content": {
-                        'component_status': False,
+                        'component_status': component_status,
                         'component_content': "https://www.arloandolive.com/cdn/shop/products/DSC00727copy_1100x.jpg?v=1631835048", 
-                        "content": DescriptionQuery,
+                        "content": DescriptionQuery["response"],
                         "product_path": searchquery.get("ProductPath", None),
                         "ProductName": searchquery.get("ProductName", None),
                         "ProductPrice": searchquery.get("ProductPrice", None),
                         "BrandName": searchquery.get("BrandName", None),
-
-
-                        
                     }
                 },
                 "logprobs": None,
