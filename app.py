@@ -35,7 +35,9 @@ import os
 # Set the OpenAI API key
 # Set up the chat model
 # ========================================================================================================================
-model = ChatOpenAI(api_key="sk-proj-BMVh1RKuJSM1kHJQ0eo4T3BlbkFJwjSss4I4ByAZAM2RE1IB",max_tokens = 4000, model="gpt-4o")
+
+apikey = os.environ['OPENAI_API_KEY']
+model = ChatOpenAI(api_key=apikey,max_tokens = 4000, model="gpt-4o")
 
 class SearchOutput(BaseModel):
     keywords: str = Field(description="remove unneeded words such as stepwords and verbs or general words like product and only keep only keep keywords with meaning for search such as product names, description, brand names, basically anything that describes the product. (words to not include: 'products', 'recommendation')")
