@@ -122,13 +122,18 @@ def hello_world():
     print(message)
     # joke_query = "Good Morning"
     # message = message.get('message', 'No message provided')
-    searchquery = with_message_history_search.invoke(
-        {"ability": "remove unneeded words such as stepwords and verbs or general words like product and only keep only keep keywords for search such as product names, descrption, brand names", "input": str(message), "instructions": str(searchParser.get_format_instructions())},
-        config={"configurable": {"session_id": "abc123"}},
-    )
-    print(searchquery["keywords"])
+    try:
+        searchquery = with_message_history_search.invoke(
+            {"ability": "remove unneeded words such as stepwords and verbs or general words like product and only keep only keep keywords for search such as product names, descrption, brand names", "input": str(message), "instructions": str(searchParser.get_format_instructions())},
+            config={"configurable": {"session_id": "abc123"}},
+        )
+        print(searchquery["keywords"])
+        component_status = True
+    except:
+        component_status = False
+        
     component_status = True
-    if searchquery["needs_product"]:
+    if component_status:
         searchquery = searchquery["keywords"]
         
         searchquery = search_product(searchquery)
