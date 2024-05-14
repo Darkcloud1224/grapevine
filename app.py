@@ -132,7 +132,7 @@ def hello_world():
     except:
         component_status = False
         
-    component_status = True
+    
     if component_status:
         searchquery = searchquery["keywords"]
         
