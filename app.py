@@ -1,10 +1,9 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from algoliasearch.search_client import SearchClient
-
-
 app = Flask(__name__)
 CORS(app)
+
 import os
 from langchain.agents import initialize_agent
 from langchain.chat_models import ChatOpenAI
@@ -32,16 +31,17 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
 import os
+
 # Set the OpenAI API key
 # Set up the chat model
 # ========================================================================================================================
 
-apikey = os.environ['OPENAI_API_KEY']
+apikey = "sk-proj-JjiRovdFeMXxuurc4X8iT3BlbkFJlwCB9pPGya7oQpC6LHTc"
 model = ChatOpenAI(api_key=apikey,max_tokens = 4000, model="gpt-4o")
 
 class SearchOutput(BaseModel):
     keywords: str = Field(description="remove unneeded words such as stepwords and verbs or general words like product and only keep only keep keywords with meaning for search such as product names, description, brand names, basically anything that describes the product. (words to not include: 'products', 'recommendation')")
-    needs_product: bool = Field(description="is the user asking for a product or asking for a recommendation of a product. if not then return false otherwise return true")
+    needs_product: bool = Field(description=" if the user is just saying hi and asking a normal request then return false")
 
 searchParser = JsonOutputParser(pydantic_object=SearchOutput)
     
@@ -103,7 +103,6 @@ def search_product(query):
             "ProductPrice": result["ProductPrice"],
             "BrandName": result["BrandNameText"]
             
-            
         }
         print(output)
         return output
@@ -127,12 +126,12 @@ def hello_world():
             {"ability": "remove unneeded words such as stepwords and verbs or general words like product and only keep only keep keywords for search such as product names, descrption, brand names", "input": str(message), "instructions": str(searchParser.get_format_instructions())},
             config={"configurable": {"session_id": "abc123"}},
         )
+        print(searchquery)
         print(searchquery["keywords"])
-        component_status = True
+        component_status = searchquery["needs_product"]
     except:
         component_status = False
         
-    
     if component_status:
         searchquery = searchquery["keywords"]
         
