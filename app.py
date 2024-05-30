@@ -35,16 +35,17 @@ import os
 # Set the OpenAI API key
 # Set up the chat model
 # ========================================================================================================================
+
 model = ChatOpenAI(max_tokens = 4000, model="gpt-4o")
 
 class SearchOutput(BaseModel):
     keywords: str = Field(description="remove unneeded words such as stepwords and verbs or general words like product and only keep only keep keywords with meaning for search such as product names, description, brand names, basically anything that describes the product. (words to not include: 'products', 'recommendation')")
-    needs_product: bool = Field(description=" if the user is just saying hi and asking a normal request then return false")
+    needs_product: bool = Field(description="if the user is just saying hi and asking a normal request then return false.")
 
 searchParser = JsonOutputParser(pydantic_object=SearchOutput)
     
 class DescriptionOutput(BaseModel):
-    response: str = Field(description="talk about the product description and its material and what's it's made out of and why they're sustainable. don't provide any url")
+    response: str = Field(description="Helping users improve their lifestyles and make it more sustainable. if the users message isn't clear always ask leading questions.")
     # response: str = Field(description="")
 
     
@@ -127,6 +128,7 @@ def hello_world():
         print(searchquery)
         print(searchquery["keywords"])
         component_status = searchquery["needs_product"]
+        print(1)
     except:
         component_status = False
         
@@ -141,17 +143,20 @@ def hello_world():
                 config={"configurable": {"session_id": "abc123"}},
             )
             component_status = False
+            print(2)
         else:
             DescriptionQuery = with_message_history_describe.invoke(
-                {"ability": "Helping users improve their lifestyles and make it more sustainable as well as help them find the products they need", "input": f"user query: {message} product details:{searchquery}", "instructions": str(DescriptionParser.get_format_instructions())},
+                {"ability": "Helping users improve their lifestyles and make it more sustainable. if the users message isn't clear always ask leading questions. if the user is asking for product recommendation and the product details isn't provided then assume product doesn't exist within our market and apologize", "input": f"user query: {message} product details:{searchquery}", "instructions": str(DescriptionParser.get_format_instructions())},
                 config={"configurable": {"session_id": "abc123"}},
             )
+            print(3)
     else:
         DescriptionQuery = with_message_history_describe.invoke(
-                {"ability": "Helping users improve their lifestyles and make it more sustainable as well as help them find the products they need.", "input": f"{message}", "instructions": str(DescriptionParser.get_format_instructions())},
+                {"ability": "Helping users improve their lifestyles and make it more sustainable. if the users message isn't clear always ask leading questions. if the user is asking for product recommendation and the product details isn't provided then assume product doesn't exist within our market and apologize", "input": f"{message}", "instructions": str(DescriptionParser.get_format_instructions())},
                 config={"configurable": {"session_id": "abc123"}},
             )
         component_status = False
+        print(4)
 
 
     print(searchquery)
@@ -190,3 +195,5 @@ def hello_world():
     
     # Convert the dictionary to JSON and return
     return jsonify(response)
+
+
