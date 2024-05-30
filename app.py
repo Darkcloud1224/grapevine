@@ -139,20 +139,20 @@ def hello_world():
         print("product: " + str(searchquery))
         if not searchquery:
             DescriptionQuery = with_message_history_describe.invoke(
-                {"ability": "Helping users improve their lifestyles and make it more sustainable. if the users message isn't clear always ask leading questions. if the user is asking for product recommendation and the product details isn't provided then assume product doesn't exist within our market and apologize", "input": f"{message}", "instructions": str(DescriptionParser.get_format_instructions())},
+                {"ability": "Helping users improve their lifestyles and make it more sustainable. if the users message isn't clear always ask leading questions. if the user is asking for product recommendation and the product details isn't provided then assume product doesn't exist within our market and apologize (don't include product id)", "input": f"{message}", "instructions": str(DescriptionParser.get_format_instructions())},
                 config={"configurable": {"session_id": "abc123"}},
             )
             component_status = False
             print(2)
         else:
             DescriptionQuery = with_message_history_describe.invoke(
-                {"ability": "Helping users improve their lifestyles and make it more sustainable. if the users message isn't clear always ask leading questions. if the user is asking for product recommendation and the product details isn't provided then assume product doesn't exist within our market and apologize", "input": f"user query: {message} product details:{searchquery}", "instructions": str(DescriptionParser.get_format_instructions())},
+                {"ability": "Helping users improve their lifestyles and make it more sustainable. if the users message isn't clear always ask leading questions. if the user is asking for product recommendation and the product details isn't provided then assume product doesn't exist within our market and apologize (don't include product id)", "input": f"user query: {message} product details:{searchquery}", "instructions": str(DescriptionParser.get_format_instructions())},
                 config={"configurable": {"session_id": "abc123"}},
             )
             print(3)
     else:
         DescriptionQuery = with_message_history_describe.invoke(
-                {"ability": "Helping users improve their lifestyles and make it more sustainable. if the users message isn't clear always ask leading questions. if the user is asking for product recommendation and the product details isn't provided then assume product doesn't exist within our market and apologize", "input": f"{message}", "instructions": str(DescriptionParser.get_format_instructions())},
+                {"ability": "Helping users improve their lifestyles and make it more sustainable. if the users message isn't clear always ask leading questions. if the user is asking for product recommendation and the product details isn't provided then assume product doesn't exist within our market and apologize (don't include product id)", "input": f"{message}", "instructions": str(DescriptionParser.get_format_instructions())},
                 config={"configurable": {"session_id": "abc123"}},
             )
         component_status = False
