@@ -78,7 +78,7 @@ def chat():
     json_data = request.json
 
     message = json_data["messages"][-1]["content"]
-    email =  json_data["messages"][-1]["email"]
+    email =  json_data["email"]
 
 
     response = manage_response(message, email)
